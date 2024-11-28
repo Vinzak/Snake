@@ -1,69 +1,139 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("game");
+const context = canvas.getContext("2d");
 
-// Spilvariabler
-const box = 20; // Størrelsen på hver "blok" i spillet
-let snake = [{ x: 9 * box, y: 9 * box }]; // Startposition
-let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+const box = 20; // Størrelsen på hver celle i griddet
+const canvasWidth = canvas.width; // Canvas bredde
+const canvasHeight = canvas.height; // Canvas højde
+
+let snake = [{ x: 5 * box, y: 5 * box }]; // Slangen starter midt i canvas
+let direction = null; // Slangens retning
 let score = 0;
-let direction;
+let gameActive = true; // Game state flag
+let food = generateFood(); // Generer mad
+let game; // For at gemme interval-variablen
 
-// Tegn spilleområdet
+// Lyt efter tastetryk for at styre slangen (for desktop)
+document.addEventListener("keydown", function(event) {
+  if (gameActive) {
+    changeDirection(event);  // Kun reagere på tastetryk under aktivt spil
+    event.preventDefault();   // Forhindrer at tastetrykkene påvirker andre elementer
+  }
+});
+
+// Lyt efter klik på knapperne (for mobil)
+document.getElementById("left").addEventListener("click", function() {
+  if (gameActive && direction !== "RIGHT") {
+    direction = "LEFT";
+  }
+});
+
+document.getElementById("up").addEventListener("click", function() {
+  if (gameActive && direction !== "DOWN") {
+    direction = "UP";
+  }
+});
+
+document.getElementById("right").addEventListener("click", function() {
+  if (gameActive && direction !== "LEFT") {
+    direction = "RIGHT";
+  }
+});
+
+document.getElementById("down").addEventListener("click", function() {
+  if (gameActive && direction !== "UP") {
+    direction = "DOWN";
+  }
+});
+
+// Tegner canvas, slangen og maden
 function draw() {
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Ryd canvas
+  context.fillStyle = "lightgreen";
+  context.fillRect(0, 0, canvasWidth, canvasHeight);
 
   // Tegn slangen
   for (let i = 0; i < snake.length; i++) {
-    ctx.fillStyle = i === 0 ? '#0f0' : '#0a0';
-    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    context.fillStyle = i === 0 ? "darkgreen" : "green"; // Hovedet er mørkere
+    context.fillRect(snake[i].x, snake[i].y, box, box);
+    context.strokeStyle = "black";
+    context.strokeRect(snake[i].x, snake[i].y, box, box);
   }
 
-  // Tegn maden
-  ctx.fillStyle = '#f00';
-  ctx.fillRect(food.x, food.y, box, box);
+  // Tegn mad
+  context.fillStyle = "red";
+  context.fillRect(food.x, food.y, box, box);
 
-  // Flyt slangen
+  // Slangens hovedposition
   let snakeX = snake[0].x;
   let snakeY = snake[0].y;
 
-  if (direction === 'LEFT') snakeX -= box;
-  if (direction === 'UP') snakeY -= box;
-  if (direction === 'RIGHT') snakeX += box;
-  if (direction === 'DOWN') snakeY += box;
+  // Bevæg slangen i den valgte retning
+  if (direction === "LEFT") snakeX -= box;
+  if (direction === "UP") snakeY -= box;
+  if (direction === "RIGHT") snakeX += box;
+  if (direction === "DOWN") snakeY += box;
 
-  // Når slangen spiser maden
+  // Tjek om slangen spiser maden
   if (snakeX === food.x && snakeY === food.y) {
-    score++;
-    food = {
-      x: Math.floor(Math.random() * 20) * box,
-      y: Math.floor(Math.random() * 20) * box,
-    };
-    if (score === 10) {
-      alert('Du har vundet! Slangen har spist 10 genstande!');
-      clearInterval(game); // Stop spillet
-    }
+    score++;  // Øg scoren
+    food = generateFood(); // Generer ny mad
   } else {
-    snake.pop(); // Fjern den sidste del af slangen
+    // Fjern slangens hale, hvis der ikke er spist mad
+    snake.pop();
   }
 
-  // Tilføj ny position til hovedet af slangen
-  let newHead = { x: snakeX, y: snakeY };
+  // Ny position for slangens hoved
+  const newHead = { x: snakeX, y: snakeY };
 
-  // Spillet slutter, hvis slangen rammer sig selv eller væggen
+  // Tjek for kollisioner med væggene eller slangen selv
   if (
-    snakeX < 0 || snakeX >= canvas.width || 
-    snakeY < 0 || snakeY >= canvas.height || 
+    snakeX < 0 || 
+    snakeX >= canvasWidth || 
+    snakeY < 0 || 
+    snakeY >= canvasHeight || 
     collision(newHead, snake)
   ) {
-    alert('Spillet er slut! Du tabte!');
-    clearInterval(game);
+    console.log("Spillet sluttes!");
+    console.log("Slangens position: ", snakeX, snakeY);
+    console.log("Slangen kolliderer med sig selv eller væggen");
+
+    // Vis "Prøv igen"-knappen
+    document.getElementById("retryButton").style.display = "block";
+    gameActive = false;  // Stop spillet
+    clearInterval(game);  // Stop game loop
+    return;
   }
 
-  snake.unshift(newHead); // Tilføj den nye hovedposition
+  // Tjek om score har nået vindergrænsen (10)
+  if (score >= 10) {
+    alert("Tillykke! Du har vundet! Din score: " + score);
+    gameActive = false; // Stop spillet
+    document.getElementById("retryButton").style.display = "block"; // Vis "Prøv igen"
+    clearInterval(game); // Stop game loop
+    return;
+  }
+
+  // Tilføj den nye position som slangens hoved
+  snake.unshift(newHead);
 }
 
-// Tjek for kollision
+// Genererer mad med bufferzone på 1 celle fra væggene
+function generateFood() {
+  return {
+    x: Math.floor(Math.random() * (canvasWidth / box - 2) + 1) * box,
+    y: Math.floor(Math.random() * (canvasHeight / box - 2) + 1) * box,
+  };
+}
+
+// Ændrer retningen baseret på tastetryk
+function changeDirection(event) {
+  if (event.keyCode === 37 && direction !== "RIGHT") direction = "LEFT";  // Venstre pil
+  else if (event.keyCode === 38 && direction !== "DOWN") direction = "UP"; // Op pil
+  else if (event.keyCode === 39 && direction !== "LEFT") direction = "RIGHT"; // Højre pil
+  else if (event.keyCode === 40 && direction !== "UP") direction = "DOWN"; // Ned pil
+}
+
+// Tjekker om slangen kolliderer med sig selv
 function collision(head, array) {
   for (let i = 0; i < array.length; i++) {
     if (head.x === array[i].x && head.y === array[i].y) {
@@ -73,51 +143,21 @@ function collision(head, array) {
   return false;
 }
 
-// Kontrollér slangen
-document.addEventListener('keydown', event => {
-  if (event.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
-  if (event.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
-  if (event.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
-  if (event.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
-});
+// Restart spillet, når brugeren trykker på "Prøv igen"
+function restartGame() {
+  // Skjul "Prøv igen"-knappen
+  document.getElementById("retryButton").style.display = "none";
 
-// Tilføj event listeners til knapperne
-document.getElementById('up').addEventListener('click', () => {
-  if (direction !== 'DOWN') direction = 'UP';
-});
-document.getElementById('down').addEventListener('click', () => {
-  if (direction !== 'UP') direction = 'DOWN';
-});
-document.getElementById('left').addEventListener('click', () => {
-  if (direction !== 'RIGHT') direction = 'LEFT';
-});
-document.getElementById('right').addEventListener('click', () => {
-  if (direction !== 'LEFT') direction = 'RIGHT';
-});
+  // Nulstil spillets tilstand
+  score = 0;
+  snake = [{ x: 5 * box, y: 5 * box }];
+  direction = null;
+  gameActive = true;
+  food = generateFood();
 
-// Swipe kontrol til mobil
-let startX, startY;
+  // Start game loop på ny
+  game = setInterval(draw, 200);
+}
 
-canvas.addEventListener('touchstart', (e) => {
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-});
-
-canvas.addEventListener('touchend', (e) => {
-  let endX = e.changedTouches[0].clientX;
-  let endY = e.changedTouches[0].clientY;
-
-  let diffX = endX - startX;
-  let diffY = endY - startY;
-
-  if (Math.abs(diffX) > Math.abs(diffY)) {
-    if (diffX > 0 && direction !== 'LEFT') direction = 'RIGHT';
-    else if (diffX < 0 && direction !== 'RIGHT') direction = 'LEFT';
-  } else {
-    if (diffY > 0 && direction !== 'UP') direction = 'DOWN';
-    else if (diffY < 0 && direction !== 'DOWN') direction = 'UP';
-  }
-});
-
-// Start spillet
-let game = setInterval(draw, 100);
+// Start spillet med en hastighed på 200ms
+game = setInterval(draw, 200);
