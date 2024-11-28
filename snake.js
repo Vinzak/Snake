@@ -104,9 +104,9 @@ function draw() {
     return;
   }
 
-  // Tjek om score har nået vindergrænsen (10)
-  if (score >= 10) {
-    alert("Tillykke! Du har vundet! Din score: " + score);
+  // Tjek om score har nået vindergrænsen (5)
+  if (score >= 5) {
+    alert("Der er slik gemt ved XXXXX");
     gameActive = false; // Stop spillet
     document.getElementById("retryButton").style.display = "block"; // Vis "Prøv igen"
     clearInterval(game); // Stop game loop
