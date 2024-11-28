@@ -5,54 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snake Game</title>
   <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
     canvas {
-      border: 1px solid #fff;
+      display: block;
+      margin: 20px auto;
+      background: lightgreen;
+      border: 2px solid black;
     }
-    #controls {
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 50px); /* 3 kolonner af 50px */
+      grid-template-rows: repeat(3, 50px); /* 3 rækker af 50px */
+      gap: 10px; /* Mellemrum mellem knapperne */
+      justify-content: center; /* Centrer knapperne */
+      margin-top: 20px;
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 50%;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      margin-top: 10px;
-    }
-    #controls div {
-      display: flex;
       justify-content: center;
     }
-    button {
-      background-color: #333;
-      color: white;
-      border: 1px solid #fff;
-      padding: 10px;
-      margin: 5px;
-      font-size: 20px;
-      border-radius: 5px;
+
+    .control-btn:hover {
+      background-color: #45a049;
     }
-    button:active {
-      background-color: #555;
+
+    .control-btn:active {
+      background-color: #3e8e41;
     }
+
+    /* Skjuler de tomme knapper */
+    .center {
+      visibility: hidden;
+    }
+
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <div id="controls">
-    <button id="up">⬆️</button>
-    <div>
-      <button id="left">⬅️</button>
-      <button id="down">⬇️</button>
-      <button id="right">➡️</button>
-    </div>
+  <canvas id="game" width="400" height="400"></canvas>
+
+  <div class="controls">
+    <!-- Tomme pladser for korrekt layout -->
+    <button class="control-btn center"></button> <!-- Øverste venstre hjørne -->
+    <button class="control-btn" id="up">↑</button> <!-- Op pil -->
+    <button class="control-btn center"></button> <!-- Øverste højre hjørne -->
+
+    <button class="control-btn" id="left">←</button> <!-- Venstre pil -->
+    <button class="control-btn center"></button> <!-- Tom for at skabe mellemrum -->
+    <button class="control-btn" id="right">→</button> <!-- Højre pil -->
+
+    <button class="control-btn center"></button> <!-- Nederste venstre hjørne -->
+    <button class="control-btn" id="down">↓</button> <!-- Ned pil -->
+    <button class="control-btn center"></button> <!-- Nederste højre hjørne -->
   </div>
+
+  <button id="retryButton" style="display:none;" onclick="restartGame()">Prøv igen</button>
+
   <script src="snake.js"></script>
 </body>
 </html>
