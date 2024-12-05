@@ -105,7 +105,7 @@ function draw() {
   }
 
   // Tjek om score har nået vindergrænsen (5)
-  if (score >= 10) {
+  if (score >= 20) {
     alert("Den er ved Morthens plads!");
     gameActive = false; // Stop spillet
     document.getElementById("retryButton").style.display = "block"; // Vis "Prøv igen"
